@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"/>
+  <title>HR Tuks – Career Networking Event | Flip Card</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #e8e4db;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
+      padding: 20px;
+    }
+
+    .scene {
+      width: 480px;
+      height: 296px;
+      perspective: 1200px;
+      cursor: pointer;
+      margin: 0 auto;
+    }
+
+    .card {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.75s cubic-bezier(0.4, 0.2, 0.2, 1);
+      border-radius: 16px;
+    }
+
+    .card.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .face {
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    /* FRONT SIDE */
+    .front {
+      background: #f5f0e8;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .front-full-header {
+      background: #0e1c49;
+      padding: 10px 18px 10px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex-shrink: 0;
+      width: 100%;
+    }
+
+    .org-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .event-sub {
+      font-size: 9px;
+      color: #a8c8f0;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .front-main {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      background: #f5f0e8;
+    }
+
+    .front-left {
+      position: relative;
+      width: 33.333%;
+      min-width: 130px;
+      background: #0e1c49;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px 12px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .net-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .fade-right {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 48px;
+      background: linear-gradient(to right, transparent, #f5f0e8);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .logo-wrap {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .actual-logo {
+      max-width: 100%;
+      max-height: 90px;
+      width: auto;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+    }
+
+    .front-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 20px 24px 20px 20px;
+      background: #f5f0e8;
+    }
+
+    .thank-you {
+      font-size: 26px;
+      font-weight: 800;
+      color: #2d6a4a;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .tagline {
+      font-size: 13px;
+      color: #5a5a5a;
+      font-style: italic;
+      letter-spacing: 0.2px;
+    }
+
+    .flip-hint {
+      font-size: 10px;
+      color: #aaa;
+      margin-top: 18px;
+      letter-spacing: 0.5px;
+      font-weight: 500;
+    }
+
+    /* BACK SIDE - dynamic questions (5 items) */
+    .back {
+      transform: rotateY(180deg);
+      background: #f5f0e8;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .back-header {
+      background: #3a7d44;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-shrink: 0;
+    }
+
+    .back-header-text {
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .back-body {
+      padding: 14px 20px 10px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .q-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .q-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      font-size: 11.5px;
+      color: #333;
+      line-height: 1.45;
+    }
+
+    .chk {
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      background: #3a7d44;
+      flex-shrink: 0;
+      margin-top: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chk svg {
+      width: 9px;
+      height: 9px;
+    }
+
+    .q-list li b {
+      font-weight: 700;
+      color: #0e1c49;
+    }
+
+    /* Subtle refresh hint */
+    .refresh-hint {
+      font-size: 9px;
+      color: #aaa;
+      text-align: center;
+      margin-top: 4px;
+      margin-bottom: 2px;
+      letter-spacing: 0.3px;
+    }
+
+    /* Bottom logo section */
+    .back-logo {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 12px 20px 18px;
+      border-top: 1px solid #e0d8cc;
+      margin-top: 4px;
+    }
+
+    .small-logo-img {
+      height: 34px;
+      width: auto;
+      display: block;
+    }
+
+    .logo-fallback-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0e1c49;
+      letter-spacing: 1px;
+      background: #f0ebe2;
+      padding: 6px 14px;
+      border-radius: 40px;
+      display: inline-block;
+      font-family: inherit;
+    }
+
+    .caption {
+      margin-top: 1.2rem;
+      font-size: 12px;
+      color: #6b5e4a;
+      text-align: center;
+      letter-spacing: 0.3px;
+      font-weight: 500;
+    }
+
+    @media (max-width: 520px) {
+      .scene {
+        width: 92vw;
+        height: calc(92vw * 0.618);
+        min-width: 280px;
+      }
+      .front-left {
+        min-width: 115px;
+        padding: 14px 8px;
+      }
+      .actual-logo {
+        max-height: 65px;
+      }
+      .front-right {
+        padding: 16px 16px 16px 12px;
+      }
+      .thank-you {
+        font-size: 20px;
+      }
+      .tagline {
+        font-size: 11px;
+      }
+      .org-name {
+        font-size: 13px;
+      }
+      .event-sub {
+        font-size: 8px;
+      }
+      .back-header-text {
+        font-size: 11px;
+      }
+      .q-list li {
+        font-size: 10px;
+        gap: 7px;
+      }
+      .small-logo-img {
+        height: 28px;
+      }
+      .logo-fallback-text {
+        font-size: 14px;
+        padding: 4px 12px;
+      }
+      .refresh-hint {
+        font-size: 8px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .front-left {
+        min-width: 100px;
+      }
+      .thank-you {
+        font-size: 18px;
+      }
+      .actual-logo {
+        max-height: 55px;
+      }
+      .q-list li {
+        font-size: 9.5px;
+      }
+    }
+
+    canvas.net-canvas {
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="scene" id="scene" onclick="flip()">
+  <div class="card" id="card">
+
+    <!-- FRONT SIDE -->
+    <div class="face front">
+      <div class="front-full-header">
+        <div class="org-name">HR Tuks</div>
+        <div class="event-sub">Career Networking Event</div>
+      </div>
+      <div class="front-main">
+        <div class="front-left">
+          <canvas class="net-canvas" id="netCanvas"></canvas>
+          <div class="fade-right"></div>
+          <div class="logo-wrap">
+            <img class="actual-logo" src="HrTuksLogo.png" alt="HR Tuks Logo">
+          </div>
+        </div>
+        <div class="front-right">
+          <div class="thank-you">Thank you<br>for joining us! ✦</div>
+          <div class="tagline">· Your future starts here.</div>
+          <div class="flip-hint">Click to flip →</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BACK SIDE - 5 dynamic questions + subtle refresh hint -->
+    <div class="face back">
+      <div class="back-header">
+        <span style="font-size:18px">🤔</span>
+        <span class="back-header-text">Not sure what to ask? Try these:</span>
+      </div>
+      <div class="back-body" id="dynamicQuestionsContainer">
+        <ul class="q-list" id="questionsList"></ul>
+        <!-- Subtle grey text telling them to refresh for new questions -->
+        <div class="refresh-hint">↻ refresh the page for new questions</div>
+      </div>
+      <div class="back-logo">
+        <img class="small-logo-img" src="HrLogo2.png" alt="HR Tuks Logo" 
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+        <span class="logo-fallback-text" style="display: none;">HR TUKS ✦</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<p class="caption" id="cap">Click the card to flip it</p>
+
+<script>
+  // ---------- DYNAMIC QUESTIONS BANK ----------
+  const allQuestions = [
+    // Hiring + standout factors
+    "What separates candidates who get interviews from those who get ignored, even when their CVs look similar?",
+    "What are common mistakes students make when applying to your graduate programmes?",
+    "Which experiences matter more to you: academic marks, leadership, projects, or work experience?",
+    "If you had to choose one thing that makes a student instantly memorable, what would it be?",
+    "What does a “high-potential” graduate look like in your company?",
+    // Growth + career path
+    "What does the first 12 months usually look like for a graduate in your organisation?",
+    "How quickly can someone move into leadership or specialised roles?",
+    "What traits do people who grow fastest in your company usually have?",
+    "What support systems are available for learning and mentorship?",
+    "What does success look like in the first year?",
+    // Industry insight
+    "What skills are becoming more valuable in your industry over the next 3–5 years?",
+    "Are there any roles students overlook that actually have strong growth potential?",
+    "What trends are changing the way you hire graduates?",
+    "How is AI changing the kinds of graduates you look for?",
+    "What technical and soft skills are currently hardest to find?",
+    // Internships / grad programmes
+    "When do applications usually open, and how early should students prepare?",
+    "What can a student do before applying to significantly improve their chances?",
+    "Do successful candidates usually have prior internship experience?",
+    "Are there specific projects or extracurriculars that impress your recruiters?",
+    "What does your selection process usually involve?",
+    // Personal / memorable questions
+    "What led you into HR/recruitment, and what have you learned from meeting so many students?",
+    "What is one thing students consistently underestimate about the job market?",
+    "What is the best career advice someone ever gave you?",
+    "What do students from University of Pretoria tend to do well in?",
+    "If you were a student again today, what would you focus on first?"
+  ];
+
+  // Function to get N random unique questions (N = 5)
+  function getRandomQuestions(count) {
+    const shuffled = [...allQuestions];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled.slice(0, count);
+  }
+
+  // Render 5 random questions into the back of the card
+  function renderDynamicQuestions() {
+    const questionCount = 4;
+    const selected = getRandomQuestions(questionCount);
+    const listContainer = document.getElementById('questionsList');
+    if (!listContainer) return;
+    
+    listContainer.innerHTML = '';
+    
+    selected.forEach(qText => {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <div class="chk"><svg viewBox="0 0 10 10" fill="none"><polyline points="2,5 4.5,7.5 8,3" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span>${qText}</span>
+      `;
+      listContainer.appendChild(li);
+    });
+  }
+
+  // Flip functionality
+  function flip() {
+    const cardEl = document.getElementById('card');
+    if (!cardEl) return;
+    cardEl.classList.toggle('flipped');
+    const captionEl = document.getElementById('cap');
+    if (captionEl) {
+      captionEl.textContent = cardEl.classList.contains('flipped')
+        ? 'Click to flip back'
+        : 'Click the card to flip it';
+    }
+  }
+
+  // ---- Network visualization (unchanged) ----
+  (function drawNetwork() {
+    const canvas = document.getElementById('netCanvas');
+    if (!canvas) return;
+    const parent = canvas.parentElement;
+    if (!parent) return;
+    let W = parent.clientWidth;
+    let H = parent.clientHeight;
+    if (W === 0 || H === 0) { W = 160; H = 240; }
+    const DPR = window.devicePixelRatio || 1;
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.scale(DPR, DPR);
+    ctx.clearRect(0, 0, W, H);
+    const pointCount = Math.max(24, Math.floor(W * H / 1800));
+    const pts = Array.from({ length: pointCount }, () => ({ x: Math.random() * W, y: Math.random() * H }));
+    const maxDist = Math.min(W, H) * 0.28;
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i + 1; j < pts.length; j++) {
+        const a = pts[i], b = pts[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < maxDist) {
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = `rgba(168, 200, 240, ${0.22 * (1 - d / maxDist)})`;
+          ctx.lineWidth = 0.9;
+          ctx.stroke();
+        }
+      }
+    }
+    pts.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(168, 200, 240, 0.75)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 1.0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(220, 235, 255, 0.9)';
+      ctx.fill();
+    });
+    pts.slice(0, 12).forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 1.0, 0, Math.PI * 2);
+      ctx.fillStyle = '#c9a63d';
+      ctx.fill();
+    });
+  })();
+
+  // Resize handler for canvas
+  let resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      const canvas = document.getElementById('netCanvas');
+      if (canvas && canvas.parentElement) {
+        (function refreshNetwork() {
+          const canvasEl = document.getElementById('netCanvas');
+          if (!canvasEl) return;
+          const parentEl = canvasEl.parentElement;
+          if (!parentEl) return;
+          let W = parentEl.clientWidth;
+          let H = parentEl.clientHeight;
+          if (W === 0 || H === 0) { W = 160; H = 240; }
+          const DPR = window.devicePixelRatio || 1;
+          canvasEl.width = W * DPR;
+          canvasEl.height = H * DPR;
+          canvasEl.style.width = W + 'px';
+          canvasEl.style.height = H + 'px';
+          const ctx = canvasEl.getContext('2d');
+          if (!ctx) return;
+          ctx.scale(DPR, DPR);
+          ctx.clearRect(0, 0, W, H);
+          const pointCount = Math.max(24, Math.floor(W * H / 1800));
+          const pts = Array.from({ length: pointCount }, () => ({ x: Math.random() * W, y: Math.random() * H }));
+          const maxDist = Math.min(W, H) * 0.28;
+          for (let i = 0; i < pts.length; i++) {
+            for (let j = i + 1; j < pts.length; j++) {
+              const a = pts[i], b = pts[j];
+              const dx = a.x - b.x, dy = a.y - b.y;
+              const d = Math.sqrt(dx * dx + dy * dy);
+              if (d < maxDist) {
+                ctx.beginPath();
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+                ctx.strokeStyle = `rgba(168, 200, 240, ${0.22 * (1 - d / maxDist)})`;
+                ctx.lineWidth = 0.9;
+                ctx.stroke();
+              }
+            }
+          }
+          pts.forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(168, 200, 240, 0.75)';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 1.0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(220, 235, 255, 0.9)';
+            ctx.fill();
+          });
+        })();
+      }
+    }, 100);
+  });
+  
+  // On page load: draw network + set 5 dynamic questions
+  window.addEventListener('load', function() {
+    renderDynamicQuestions();
+    
+    const canvas = document.getElementById('netCanvas');
+    if (canvas && canvas.parentElement) {
+      const parent = canvas.parentElement;
+      let W = parent.clientWidth;
+      let H = parent.clientHeight;
+      if (W === 0 || H === 0) { W = 158; H = 248; }
+      const DPR = window.devicePixelRatio || 1;
+      canvas.width = W * DPR;
+      canvas.height = H * DPR;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.scale(DPR, DPR);
+        ctx.clearRect(0, 0, W, H);
+        const pointCount = Math.max(24, Math.floor(W * H / 1800));
+        const pts = Array.from({ length: pointCount }, () => ({ x: Math.random() * W, y: Math.random() * H }));
+        const maxDist = Math.min(W, H) * 0.28;
+        for (let i = 0; i < pts.length; i++) {
+          for (let j = i + 1; j < pts.length; j++) {
+            const a = pts[i], b = pts[j];
+            const dx = a.x - b.x, dy = a.y - b.y;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d < maxDist) {
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.strokeStyle = `rgba(168, 200, 240, ${0.22 * (1 - d / maxDist)})`;
+              ctx.lineWidth = 0.9;
+              ctx.stroke();
+            }
+          }
+        }
+        pts.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(168, 200, 240, 0.75)';
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 1.0, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(230, 242, 255, 0.95)';
+          ctx.fill();
+        });
+      }
+    }
+  });
+</script>
+
+</body>
+</html>
