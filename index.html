@@ -35,12 +35,14 @@
       height: 100%;
       position: relative;
       transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
       transition: transform 0.75s cubic-bezier(0.4, 0.2, 0.2, 1);
       border-radius: 16px;
     }
 
     .card.flipped {
       transform: rotateY(180deg);
+      -webkit-transform: rotateY(180deg);
     }
 
     .face {
@@ -51,6 +53,9 @@
       -webkit-backface-visibility: hidden;
       overflow: hidden;
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+      /* Force hardware acceleration */
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
     }
 
     /* FRONT SIDE */
@@ -58,6 +63,9 @@
       background: #f5f0e8;
       display: flex;
       flex-direction: column;
+      /* Ensure front face is not visible when flipped */
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
 
     .front-full-header {
@@ -104,6 +112,9 @@
       padding: 20px 12px;
       overflow: hidden;
       flex-shrink: 0;
+      /* Ensure inner content doesn't break backface */
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
 
     .net-canvas {
@@ -112,6 +123,7 @@
       width: 100%;
       height: 100%;
       display: block;
+      pointer-events: none;
     }
 
     .fade-right {
@@ -153,6 +165,8 @@
       justify-content: center;
       padding: 20px 24px 20px 20px;
       background: #f5f0e8;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
 
     .thank-you {
@@ -178,12 +192,15 @@
       font-weight: 500;
     }
 
-    /* BACK SIDE - dynamic questions (5 items) */
+    /* BACK SIDE */
     .back {
       transform: rotateY(180deg);
+      -webkit-transform: rotateY(180deg);
       background: #f5f0e8;
       display: flex;
       flex-direction: column;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
 
     .back-header {
@@ -248,7 +265,6 @@
       color: #0e1c49;
     }
 
-    /* Subtle refresh hint */
     .refresh-hint {
       font-size: 9px;
       color: #aaa;
@@ -258,7 +274,6 @@
       letter-spacing: 0.3px;
     }
 
-    /* Bottom logo section */
     .back-logo {
       display: flex;
       justify-content: center;
@@ -356,10 +371,6 @@
         font-size: 9.5px;
       }
     }
-
-    canvas.net-canvas {
-      pointer-events: none;
-    }
   </style>
 </head>
 <body>
@@ -389,7 +400,7 @@
       </div>
     </div>
 
-    <!-- BACK SIDE - 5 dynamic questions + subtle refresh hint -->
+    <!-- BACK SIDE -->
     <div class="face back">
       <div class="back-header">
         <span style="font-size:18px">🤔</span>
@@ -397,7 +408,6 @@
       </div>
       <div class="back-body" id="dynamicQuestionsContainer">
         <ul class="q-list" id="questionsList"></ul>
-        <!-- Subtle grey text telling them to refresh for new questions -->
         <div class="refresh-hint">↻ refresh the page for new questions</div>
       </div>
       <div class="back-logo">
@@ -415,31 +425,26 @@
 <script>
   // ---------- DYNAMIC QUESTIONS BANK ----------
   const allQuestions = [
-    // Hiring + standout factors
     "What separates candidates who get interviews from those who get ignored, even when their CVs look similar?",
     "What are common mistakes students make when applying to your graduate programmes?",
     "Which experiences matter more to you: academic marks, leadership, projects, or work experience?",
     "If you had to choose one thing that makes a student instantly memorable, what would it be?",
     "What does a “high-potential” graduate look like in your company?",
-    // Growth + career path
     "What does the first 12 months usually look like for a graduate in your organisation?",
     "How quickly can someone move into leadership or specialised roles?",
     "What traits do people who grow fastest in your company usually have?",
     "What support systems are available for learning and mentorship?",
     "What does success look like in the first year?",
-    // Industry insight
     "What skills are becoming more valuable in your industry over the next 3–5 years?",
     "Are there any roles students overlook that actually have strong growth potential?",
     "What trends are changing the way you hire graduates?",
     "How is AI changing the kinds of graduates you look for?",
     "What technical and soft skills are currently hardest to find?",
-    // Internships / grad programmes
     "When do applications usually open, and how early should students prepare?",
     "What can a student do before applying to significantly improve their chances?",
     "Do successful candidates usually have prior internship experience?",
     "Are there specific projects or extracurriculars that impress your recruiters?",
     "What does your selection process usually involve?",
-    // Personal / memorable questions
     "What led you into HR/recruitment, and what have you learned from meeting so many students?",
     "What is one thing students consistently underestimate about the job market?",
     "What is the best career advice someone ever gave you?",
@@ -447,7 +452,6 @@
     "If you were a student again today, what would you focus on first?"
   ];
 
-  // Function to get N random unique questions (N = 5)
   function getRandomQuestions(count) {
     const shuffled = [...allQuestions];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -457,15 +461,12 @@
     return shuffled.slice(0, count);
   }
 
-  // Render 5 random questions into the back of the card
   function renderDynamicQuestions() {
     const questionCount = 4;
     const selected = getRandomQuestions(questionCount);
     const listContainer = document.getElementById('questionsList');
     if (!listContainer) return;
-    
     listContainer.innerHTML = '';
-    
     selected.forEach(qText => {
       const li = document.createElement('li');
       li.innerHTML = `
@@ -476,7 +477,6 @@
     });
   }
 
-  // Flip functionality
   function flip() {
     const cardEl = document.getElementById('card');
     if (!cardEl) return;
@@ -489,8 +489,8 @@
     }
   }
 
-  // ---- Network visualization (unchanged) ----
-  (function drawNetwork() {
+  // Network visualization (unchanged but with mobile performance tweak)
+  function drawNetwork() {
     const canvas = document.getElementById('netCanvas');
     if (!canvas) return;
     const parent = canvas.parentElement;
@@ -507,7 +507,7 @@
     if (!ctx) return;
     ctx.scale(DPR, DPR);
     ctx.clearRect(0, 0, W, H);
-    const pointCount = Math.max(24, Math.floor(W * H / 1800));
+    const pointCount = Math.max(20, Math.floor(W * H / 2000));
     const pts = Array.from({ length: pointCount }, () => ({ x: Math.random() * W, y: Math.random() * H }));
     const maxDist = Math.min(W, H) * 0.28;
     for (let i = 0; i < pts.length; i++) {
@@ -520,135 +520,34 @@
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
           ctx.strokeStyle = `rgba(168, 200, 240, ${0.22 * (1 - d / maxDist)})`;
-          ctx.lineWidth = 0.9;
+          ctx.lineWidth = 0.8;
           ctx.stroke();
         }
       }
     }
     pts.forEach(p => {
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(168, 200, 240, 0.75)';
+      ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(168, 200, 240, 0.7)';
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 1.0, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, 0.8, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(220, 235, 255, 0.9)';
       ctx.fill();
     });
-    pts.slice(0, 12).forEach(p => {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 1.0, 0, Math.PI * 2);
-      ctx.fillStyle = '#c9a63d';
-      ctx.fill();
-    });
-  })();
+  }
 
-  // Resize handler for canvas
+  // Initial draw
+  drawNetwork();
+  renderDynamicQuestions();
+
+  // Handle resize
   let resizeTimeout;
-  window.addEventListener('resize', function() {
+  window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
-      const canvas = document.getElementById('netCanvas');
-      if (canvas && canvas.parentElement) {
-        (function refreshNetwork() {
-          const canvasEl = document.getElementById('netCanvas');
-          if (!canvasEl) return;
-          const parentEl = canvasEl.parentElement;
-          if (!parentEl) return;
-          let W = parentEl.clientWidth;
-          let H = parentEl.clientHeight;
-          if (W === 0 || H === 0) { W = 160; H = 240; }
-          const DPR = window.devicePixelRatio || 1;
-          canvasEl.width = W * DPR;
-          canvasEl.height = H * DPR;
-          canvasEl.style.width = W + 'px';
-          canvasEl.style.height = H + 'px';
-          const ctx = canvasEl.getContext('2d');
-          if (!ctx) return;
-          ctx.scale(DPR, DPR);
-          ctx.clearRect(0, 0, W, H);
-          const pointCount = Math.max(24, Math.floor(W * H / 1800));
-          const pts = Array.from({ length: pointCount }, () => ({ x: Math.random() * W, y: Math.random() * H }));
-          const maxDist = Math.min(W, H) * 0.28;
-          for (let i = 0; i < pts.length; i++) {
-            for (let j = i + 1; j < pts.length; j++) {
-              const a = pts[i], b = pts[j];
-              const dx = a.x - b.x, dy = a.y - b.y;
-              const d = Math.sqrt(dx * dx + dy * dy);
-              if (d < maxDist) {
-                ctx.beginPath();
-                ctx.moveTo(a.x, a.y);
-                ctx.lineTo(b.x, b.y);
-                ctx.strokeStyle = `rgba(168, 200, 240, ${0.22 * (1 - d / maxDist)})`;
-                ctx.lineWidth = 0.9;
-                ctx.stroke();
-              }
-            }
-          }
-          pts.forEach(p => {
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(168, 200, 240, 0.75)';
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, 1.0, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(220, 235, 255, 0.9)';
-            ctx.fill();
-          });
-        })();
-      }
-    }, 100);
-  });
-  
-  // On page load: draw network + set 5 dynamic questions
-  window.addEventListener('load', function() {
-    renderDynamicQuestions();
-    
-    const canvas = document.getElementById('netCanvas');
-    if (canvas && canvas.parentElement) {
-      const parent = canvas.parentElement;
-      let W = parent.clientWidth;
-      let H = parent.clientHeight;
-      if (W === 0 || H === 0) { W = 158; H = 248; }
-      const DPR = window.devicePixelRatio || 1;
-      canvas.width = W * DPR;
-      canvas.height = H * DPR;
-      canvas.style.width = W + 'px';
-      canvas.style.height = H + 'px';
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.scale(DPR, DPR);
-        ctx.clearRect(0, 0, W, H);
-        const pointCount = Math.max(24, Math.floor(W * H / 1800));
-        const pts = Array.from({ length: pointCount }, () => ({ x: Math.random() * W, y: Math.random() * H }));
-        const maxDist = Math.min(W, H) * 0.28;
-        for (let i = 0; i < pts.length; i++) {
-          for (let j = i + 1; j < pts.length; j++) {
-            const a = pts[i], b = pts[j];
-            const dx = a.x - b.x, dy = a.y - b.y;
-            const d = Math.sqrt(dx * dx + dy * dy);
-            if (d < maxDist) {
-              ctx.beginPath();
-              ctx.moveTo(a.x, a.y);
-              ctx.lineTo(b.x, b.y);
-              ctx.strokeStyle = `rgba(168, 200, 240, ${0.22 * (1 - d / maxDist)})`;
-              ctx.lineWidth = 0.9;
-              ctx.stroke();
-            }
-          }
-        }
-        pts.forEach(p => {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(168, 200, 240, 0.75)';
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, 1.0, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(230, 242, 255, 0.95)';
-          ctx.fill();
-        });
-      }
-    }
+      drawNetwork();
+    }, 150);
   });
 </script>
 
